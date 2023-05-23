@@ -1,0 +1,120 @@
+For timings, source is either 256kHz RC oscillator or 4096kHz crystal. RC is
+supported only in standalone mode. We will divide either to make fSys = 64000Hz
+for emulation purposes. Unknown how the clock is really divided in hardware.
+Emulation should ideally derive fSys directly from output sample rate.
+
+Some timings use a value of 16.384ms but this is probably wrong! The closest
+that can be derived from the inputs is 256k/4194 = 61.04Hz = 16.383ms.
+More likely it is a simple binary counter leading to 16.0ms, needs testing.
+
+Apparently 32kHz sampling is unavailable in RC mode, likely due to underflowing
+the internal sample fetching process.
+
+In data below, "x" denotes "don't care". For MSM665x these are canonically zero.
+
+
+==== PHRASE CONTROL TABLE ====
+
+May also be referred to as "Edit ROM"
+
+Consists of 128 rows of 16 bytes each.
+Row 0 is a reset/default configuration and generally contains a silence command.
+Rows 1-127 contain up to 8 phrase control commands.
+If less than 8 commands are used, an End command follows the last valid command.
+
+
+==== PHRASE CONTROL COMMAND ====
+
+First byte:
+	Bit 7: Channel; 0:ch2, 1:ch1
+	Bit 6-5: Command type
+	Bit 4-0: Command-specific parameters
+
+Second byte:
+	Bit 7: x
+	Bit 6-0: Extended parameter
+
+Commands:
+	00000000: End
+		Suspected to be x00xxxxx
+		Channel not used
+		Invalid for external input?
+		Second byte is not read?
+
+	C01xxxxx: Silence
+		Second byte = Duration; val * 16.384ms; 1 <= val <= 127
+
+	110xLLFF: Beep
+		Channel always 1 as beep only valid for channel 1.
+		Unknown what happens if channel 2 selected.
+		LL = Level:
+			00: 1/8
+			01: 1/4
+			10: 1/3
+			11: 1/2
+		FF = Frequency:
+			00: 500Hz (fSys/128)
+			01: 1000Hz (fSys/64)
+			10: 1333.3~Hz (fSys/48)
+			11: 2000Hz (fSys/32)
+		Second byte = Duration; val * 16.384ms; 1 <= val <= 127
+
+	C11VRRLL: Phrase sample
+		V = Enable volume decay when repeating; 0:Disable, 1:Enable
+		RR = Repeat count; 00:1, 01:2, 10:4, 11:Infinite
+		LL = Level attenuation; 00:0dB, 01:-6dB, 10:-12dB, 11:-18dB
+		Second byte = Phrase address; ; 1 <= val <= 127
+
+
+==== SAMPLE INIT TABLE ====
+
+Consists of 128 entries of 4 bytes each.
+Empty entries are all zeros, entry 0 is always empty and probably never read.
+
+First byte: FFxxxRRR
+	F = Format; 00:4bit ADPCM, 01:8bit unsigned PCM, 10:Melody (11:Invalid)
+	R = Sample rate:
+		000: 8000Hz (fSys/8)
+		001: 10666.7~Hz (fSys/6)
+		010: 12800Hz (fSys/5)
+		011: 32000Hz (fSys/2)
+		100: 4000Hz (fSys/16)
+		101: 5333.3~Hz (fSys/12)
+		110: 6400Hz (fSys/10)
+		111: 16000Hz (fSys/4)
+	Sample rate also affects LPF cutoff frequency, datasheet gives values.
+
+Remaining bytes are the sample data address, big-endian.
+Unknown what happens if it's out of range for the given ROM.
+
+
+==== SAMPLE DATA: ADPCM ====
+
+Data is given in chunks, with data length defined by the first byte (0-255).
+A length of zero marks the end of the data and playback stops.
+
+Remaining bytes in each chunk are 2x ADPCM samples each (2-510 samples).
+The high nybble is played first, then the low nybble.
+
+The format is as described in the OKI/VOX/Dialogic ADPCM specification in
+dialogic_adpcm.pdf, except that the inital value is set to approximately half
+scale (2048?). The output uses the full 12-bit DAC range when attenuation is
+disabled, and saturates at the 12 bit limit rather than overflowing.
+
+
+==== SAMPLE DATA: PCM ====
+
+Data is given in chunks as described in the ADPCM section.
+
+The data bytes are raw unsigned 8-bit PCM (centered on 128).
+Unknown how this is scaled to 12-bit DAC range but presumed to be with
+dac = (pcm << 4) i.e. PCM value abcdefgh becomes DAC value abcdefgh0000.
+Alternatively the bottom 4 bits may be set from abcd by down-shifting.
+
+
+==== SAMPLE DATA: MELODY ====
+
+The melody format is not currently understood enough to implement, but its chunk
+format is known. The first byte is some unknown parameter, the second byte is
+the data length, and remaining data bytes are unknown. Length of zero is end.
+Chunks are much smaller in this format due to the leading unknown parameter.

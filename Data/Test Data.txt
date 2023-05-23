@@ -1,0 +1,85 @@
+A00-A7F:
+Both phrase control & sample init table start here in test mode
+
+Phrase control 0
+00000000000000000000000000000000
+
+Phrase control 1
+E50FE014000000000000000000000000
+phrase(ch1, no smooth, repeat 2, level -6dB, sample 15)
+phrase(ch1, no smooth, repeat 1, level 0dB, sample 20)
+end
+
+Phrase control 2
+E0146014E00F00000000000000000000
+phrase(ch1, no smooth, repeat 1, level 0dB, sample 20)
+phrase(ch2, no smooth, repeat 1, level 0dB, sample 20)
+phrase(ch1, no smooth, repeat 1, level 0dB, sample 15)
+end
+
+Sample init 12-15
+04000A8005000A8006000A8000000A80
+adpcm(4kHz, address A80)
+adpcm(5.3kHz, address A80)
+adpcm(6.4kHz, address A80)
+adpcm(8kHz, address A80)
+
+Sample init 16-19
+01000A8002000A8007000A8003000A80
+adpcm(10.7kHz, address A80)
+adpcm(12.8kHz, address A80)
+adpcm(16kHz, address A80)
+adpcm(32kHz, address A80)
+
+Sample init 20-23
+00000A8640000A9080000AA080000AB2
+adpcm(8kHz, address A86)
+pcm(8kHz, address A90)
+melody(8kHz?, address AA0)
+melody(8kHz?, address AB2)
+
+Sample init 24-27
+00010FFD000000000000000000000000
+pcm(8kHz, address 10FFD)
+
+Sample init 28-31?
+00000000000000000000000000000000
+
+A80-AFF:
+Test sample data
+
+A80: 04 9ABC4567 00 (adpcm)
+A86: 08 4567012389ABCDF2 00 (adpcm)
+A90: 0E 3445566765543210FEDCCEF03720 00 (pcm)
+AA0: 0403 9ABC45 8004 672301AB 0003 F2CDAB 0000 (melody)
+AB2: FF0D 0040687F684000C0988098C000 0000 (melody)
+
+End of ROM:
+10FFD: 01 7A 00 (pcm)
+
+
+Melody data format interpretation:
+param1 n [n*data]
+...
+00 00
+
+Somehow encodes sample number (samples are 1/16 notes at a fixed rate), note type / rest type, BPM.
+param1 observed: 04, 80, 00, FF
+
+BPM is between 60 (32000 clocks per 32nd) and 160 (12000 clocks per 32nd)
+
+FF 11111111 param1
+00 00000000 0
+40 01000000 64
+68 01101000 104
+7F 01111111 127
+68 01101000 104
+40 01000000 64
+00 00000000 0
+C0 11000000 -64
+98 10011000 -104
+80 10000000 -128
+98 10011000 -104
+C0 11000000 -64
+00 00000000 0
+Looks like a sine but not quite. Signed values used here, everything else is unsigned. Filler data?

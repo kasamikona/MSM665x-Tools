@@ -1,0 +1,70 @@
+==== SETUP ====
+
+Grab a copy of VoicePro3 ver1.2.1 from here:
+https://www.arexinc.co.jp/main/library/library.htm
+(first link in the boxes)
+
+You may also wish to download some sample wav files from
+https://www.arexinc.co.jp/main/library/se.htm to a folder.
+
+From VPro3_Prog.lzh, extract the following files
+- Vp3Romf.exe
+- COkiADPCM.dll
+- ML2302.DLL
+- English/Vp3_Manual.pdf (not required)
+You won't need the rest of the files for this.
+
+IMPORTANT: You need to patch Vp3Romf.exe to run without the AR207 hardware.
+Open the exe file in a hex editor.
+At 2F92C change byte from 74 to 75.
+At 304FB change byte from 75 to 74.
+Now the hardware check on launch is bypassed. Wave editor not patched yet.
+
+If the link above dies, contact me and I can provide a copy.
+
+
+==== EDITING ====
+
+Project .rmf files can be saved and loaded from the file menu.
+
+Select target device in Options > Device. Here mainly interested in MSM6650/53.
+Leave Osc settings at the default (CR, 256kHz).
+Changing the device settings will clear all sound data so do this first!
+
+Set output format to HEX & Binary in Options > Setup.
+
+To load sound files, double click a row and select a suitable .wav/.pcm.
+44100Hz files load but will become 8000Hz. Stereo files will not load.
+
+Each row in the window corresponds to a sample.
+Sample parameters can be edited by double clicking any column.
+
+User Address column maps to edit ROM / phrase control table.
+Phrase column maps to the phrase sample number. They are auto assigned but can be manually set.
+Duplicate User Address or duplicate Phrase with different data is invalid.
+
+Up to 8 rows can be joined under the same user address by selecting multiple rows with Shift/Ctrl
+and Right Click > Joining. Joined set of rows with User Address = 1 and Phrase 4,5,6 means play
+samples 4,5,6 when address 1 triggered. A joined set can be separated with Right Click > Partition.
+
+Once you have a joined set you can also add silences and beeps. These can't be added outside sets
+because they are only supported in the newer devices with edit ROM / phrase control table functions.
+You can create a set by copying a row, changing User Address, joining, then removing the second row.
+
+The melody function in the 665x series is not supported at all by this software!
+
+
+==== ROM EXPORT ====
+
+To export a ROM, use Create > ROM File or the blue chip button.
+
+Granular noise reduction is a preprocessing step on audio data when exporting.
+It is suggested to disable this for testing, especially for round-trip tests.
+
+When setting the output file, be aware the program will convert to uppercase and may append numbers.
+It will then ask for a ROM Size, I suggest 1 Mbit for MSM6653.
+
+The output will consist of
+- One or more .HEX files, each the selected size, with numbers appended if there are multiple files.
+- A .BIN file with the complete data. NOT the same size as device ROM, will be some multiple of the selected size.
+- A .INF file describing the memory map of the data and device parameters.
