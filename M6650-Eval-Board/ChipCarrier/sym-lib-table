@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "M6650_parts")(type "KiCad")(uri "${KIPRJMOD}/../M6650_parts.kicad_sym")(options "")(descr ""))
+)
