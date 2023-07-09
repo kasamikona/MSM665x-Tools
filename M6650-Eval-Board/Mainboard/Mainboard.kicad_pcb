@@ -5083,7 +5083,7 @@
   (gr_text "NAR" (at 55.88 84.455 90) (layer "F.SilkS") (tstamp d9392dbe-5455-475e-b33f-35a378190265)
     (effects (font (size 1.25 0.83) (thickness 0.15)) (justify left))
   )
-  (gr_text "SERIAL\nSTBY\nRND\nPORTL" (at 57.15 62.23 90) (layer "F.SilkS") (tstamp db6ca746-166c-4caa-8400-8ec6710fe225)
+  (gr_text "SERIAL\n!STBY\n!RND\nPORTL" (at 57.15 62.23 90) (layer "F.SilkS") (tstamp db6ca746-166c-4caa-8400-8ec6710fe225)
     (effects (font (size 1 1) (thickness 0.15)) (justify right top))
   )
   (gr_text "POWER" (at 19.685 33.02) (layer "F.SilkS") (tstamp fb5db6fc-17b9-40a3-98cc-e4d215179159)
